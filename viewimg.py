@@ -83,11 +83,11 @@ def read_image(imagefile, format=None, width=None, height=None, pitch=None):
     Y_pixels = []
     UV_pixels = []
     global canvas, photo
-
+ 
     if format is None:
         # 打开图像
         img = Image.open(imagefile)
-
+        image_save_data = 0 # fix fail open img issue-> the issue is "UnboundLocalError: local variable 'image_save_data' referenced before assignment"
         # 将图像转换为 numpy 数组
         data = np.array(img)
         img_resized = img.resize((canvas.winfo_width(), canvas.winfo_height()), Image.LANCZOS)
