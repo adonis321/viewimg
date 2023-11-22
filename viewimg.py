@@ -1,7 +1,7 @@
 import os
 import cv2
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, Label
 from tkinter import filedialog
 from tkinter import messagebox
 from PIL import Image, ImageTk
@@ -15,6 +15,7 @@ import A2R10G10B10 as a2r10g10b10
 import A2B10G10R10 as a2b10g10r10
 import Y10_U10V10_N420 as Y10_U10V10_N420
 import open_file_paths as fp
+import format_info as fi
 #import imageio
 
 img = None
@@ -28,7 +29,7 @@ global scrollbar
 global filename
 global ax_x
 global ax_y
-ax_x = 360 #画布坐标
+ax_x = 440 #画布坐标
 ax_y = 10
 # 创建全局字典来存储文件路径
 file_paths = {}
@@ -96,7 +97,7 @@ def read_image(imagefile, format=None, width=None, height=None, pitch=None):
         canvas.image = photo
         #canvas.tag_bind(image_id, "<Button-1>", show_real_size)
         #canvas.bind("<Button-1>", show_real_size)
-    elif format == 'A2R10G10B10_1P':
+    elif format == 'T_A2R10G10B10_1P':
         # 从 bin 文件中读取数据
         with open(imagefile, 'rb') as f:
         #data = np.fromfile(f, dtype=np.uint8 if format == 'RGB888' else np.uint32)
@@ -142,7 +143,7 @@ def read_image(imagefile, format=None, width=None, height=None, pitch=None):
             #canvas.tag_bind(image_id, "<Button-1>", show_real_size)
             #canvas.bind("<Button-1>", show_real_size)
             data = data.reshape((height, width, 4))
-    elif format == 'A2B10G10R10_1P':
+    elif format == 'T_A2B10G10R10_1P':
         # 从 bin 文件中读取数据
         with open(imagefile, 'rb') as f:
             pixel_data = f.read()
@@ -228,7 +229,7 @@ def zoom_fun(event):
 def display_image(data,image_save_data=None):
     global canvas_t
     # 创建 Figure 对象
-    fig = Figure(figsize=(5, 4), dpi=100)
+    fig = Figure(figsize=(10, 5), dpi=100)
 
     # 在 Figure 对象中创建一个子图
     ax = fig.add_subplot(121)
@@ -446,6 +447,7 @@ def on_format_selected(event):
     # 作为示例，我只是随机设置了一个数值
     num_planes = format_to_planes(selected_format)  # 在这里设置你的 plane 取值
     update_entries_and_buttons()
+    update_format_info(selected_format)
 
 # 函数，控制条目和按钮的显示/隐藏
 def format_to_planes(format):
@@ -455,9 +457,14 @@ def format_to_planes(format):
         return 3
     else:
         return 1
+
+def update_format_info(format_info):
+    info = 0
+    info = fi.format_info(format_info)
+    label_text.set(info)
 ##################################################################################
 def main():
-    global root, width_entry, height_entry, pitch_entry, format_var,num_planes
+    global root, width_entry, height_entry, pitch_entry, format_var,num_planes,format_d_label
     # 创建 tkinter 窗口
     root = tk.Tk()
 
@@ -465,7 +472,7 @@ def main():
     root.geometry('1170x850')
 
     # 设置窗口的图标
-    #root.iconphoto(False, tk.PhotoImage(file="logo.png"))
+    root.iconphoto(False, tk.PhotoImage(file='panda.png'))
 
     # 创建一个白色背景的 Frame 控件
     frame = tk.Frame(root, bg='white', width=750, height=750)
@@ -509,12 +516,18 @@ def main():
     format_label = tk.Label(root, text="Format:", anchor="w")
     format_label.place(x=10, y=100)
 
+    #创建format排列方式说明对象
+    global label_text
+    label_text = tk.StringVar()
+    format_d_label = tk.Label(root, textvariable=label_text,anchor="e",justify=tk.LEFT)
+    format_d_label.place(x=5,y=260)
+
     # 创建 StringVar 对象
     format_var = tk.StringVar()
 
     # 创建 Combobox 对象
     #format_combobox = ttk.Combobox(root, textvariable=format_var, values=['ARGB8888', 'YUV', 'RGB888', 'A2Y10U10V10', 'A2R10G10B10', 'A2B10G10R10'])
-    format_combobox = ttk.Combobox(root, textvariable=format_var, values=fp.img_formats)
+    format_combobox = ttk.Combobox(root, textvariable=format_var, values=fi.img_formats)
     format_combobox.place(x=100, y=100)
     format_combobox.bind("<<ComboboxSelected>>", on_format_selected)
 
@@ -528,6 +541,19 @@ def main():
 
     ori_img_button = tk.Button(root, text="show_bin", command=lambda : open_bin_file())
     ori_img_button.place(x=10, y=170)
+####################################################################
+    #打开图像文件并创建PIL Image 对象
+    image_path = "logo.png"
+    pil_image = Image.open(image_path)
+
+    #将PIL Image对象转换为Tkinter 可用的PhotoInage对象
+    tk_image = ImageTk.PhotoImage(pil_image)
+
+    #创建Label组件，并将PhotoImage对象作为其图像设置
+    label = Label(root, image=tk_image)
+    #显示Label组件
+    label.place(x=30,y=500)
+####################################################################
     # 运行 tkinter 主循环
     #root.after(100, update_frame)
     # 运行 tkinter 主循环
